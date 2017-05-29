@@ -1,0 +1,53 @@
+﻿@model Model.Tables.Category
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title =
+    "Viewing Category Details";
+}
+
+@if (@TempData["Message"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["Message"]
+    </div>
+}
+
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        Removing Category Data
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            @Html.LabelFor(model => model.Name)<br />
+            <div class="input-group">
+                <span class="input-group-addon">
+                    <i class="glyphicon glyphicon-user">
+                    </i>
+                </span>
+                @Html.EditorFor(model => model.Name, new
+           {
+               htmlAttributes = new
+               {
+                   @class =
+"form-control",
+                   disabled = "disabled"
+               }
+           })
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer panel-info">
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            <input type="submit" value="Remove Category" class="btn btn-danger" />
+            @Html.ActionLink("Return to Category",
+"Index", null, new
+{
+    @class =
+"btn btn-info"
+})
+        }
+    </div>
+</div>

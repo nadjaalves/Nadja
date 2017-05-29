@@ -1,0 +1,69 @@
+﻿@model  Model.Registers.Product
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Viewing Products Details";
+}
+
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            Viewing Products Details
+        </div>
+        <div class="panel-body">
+            @Html.Partial("~/Views/Products/_PartialDetailsContentPanel.cshtml", Model)
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(model => model.Category.Name)<br />
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-user"></i>
+                    </span>
+                    @Html.EditorFor(model => model.Category.Name,
+new
+{
+    htmlAttributes = new
+    {
+        @class =
+"form-control",
+        disabled = "disabled"
+    }
+})
+                </div>
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(model => model.Supplier.Name)<br />
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="glyphicon glyphicon-user"></i>
+                    </span>
+                    @Html.EditorFor(model => model.Supplier.Name,
+new
+{
+    htmlAttributes = new
+    {
+        @class =
+"form-control",
+        disabled = "disabled"
+    }
+})
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer panel-info">
+            @Html.ActionLink("Edit", "Edit", new
+{
+    id = Model.
+ProductId
+}, new { @class = "btn btn-info" })
+            @Html.ActionLink("Return to Product", "Index",
+null, new { @class = "btn btn-info" })
+        </div>
+    </div>
+    @section ScriptPage {
+        <script type="text/javascript">
+$(document).ready(function () {
+$('li').removeClass("active");
+$('#liProducts').addClass("active");
+});
+        </script>
+    }
