@@ -12,6 +12,7 @@ using Service.Tables;
 
 namespace Nadja.Controllers
 {
+
     public class ProductsController : Controller
     {
         private ProductService productService =new ProductService();

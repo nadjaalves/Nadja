@@ -16,13 +16,14 @@ namespace Persistence.DAL.Tables
 
         public IQueryable<Category>GetOrderedByName()
         {
-            return context.Categories.OrderBy(n => n.Name);
+            return context.Categories;
         }
 
         public Category ById(long id)
         {
             return context.Categories.Where(p => p.CategoryId == id).First();
         }
+
         public void Save(Category category)
         {
             if (category.CategoryId == null)

@@ -10,6 +10,9 @@ using System.Web.Mvc;
 using Service.Registers;
 using Service.Tables;
 using System.Threading.Tasks;
+using Nadja.Models;
+using System.Net.Http;
+using Newtonsoft.Json;
 
 namespace Nadja.Controllers
 {
@@ -18,11 +21,26 @@ namespace Nadja.Controllers
       
         private CategoryService categoryService = new CategoryService();
       
-        // GET: Category
-        public ActionResult Index()
+       
+
+        // GET: Categories
+        public async Task<ActionResult> Index()
         {
-           
-            return View(categoryService.GetOrderedByName());
+            var apiModel = new CategoryListAPIModel();
+
+            var resp = await GetFromAPI(response =>
+            {
+                if (response.IsSuccessStatusCode)
+                {
+                    // { Message: "OK", Result: [{},{}]}
+                    string result = response.Content
+                    .ReadAsStringAsync().Result;
+                    apiModel = JsonConvert
+                    .DeserializeObject<CategoryListAPIModel>(result);
+                }
+            });
+
+            return View(apiModel.Result);
         }
 
 
@@ -33,6 +51,7 @@ namespace Nadja.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
+
             Category category = categoryService.ById((long)id);
             if (category == null)
             {
@@ -41,19 +60,72 @@ namespace Nadja.Controllers
             return View(category);
         }
 
-        private void PopularViewBag(Category category  = null)
+        private async Task<ActionResult> GetViewById(long? id)
         {
-            if (category == null)
+            if (id == null)
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            CategoryAPIModel item = null;
+            var resp = await GetFromAPI(response =>
             {
-                ViewBag.CategoryId = new SelectList(categoryService.GetOrderedByName(),
-                "CategoryId", "Name");
-            }
-            else
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = response.Content
+                    .ReadAsStringAsync().Result;
+                    item = JsonConvert
+                    .DeserializeObject<CategoryAPIModel>(result);
+                }
+            }, id.Value);
+
+            if (!resp.IsSuccessStatusCode)
+                return new HttpStatusCodeResult(resp.StatusCode);
+
+            if (item.Message == "!OK" ||
+                item.Result == null) return HttpNotFound();
+
+            return View(item.Result);
+        }
+
+        private async Task<HttpResponseMessage> GetFromAPI(
+            Action<HttpResponseMessage> action,
+            long? id = null)
+        {
+            using (var client = new HttpClient())
             {
-                ViewBag.CategoryId = new SelectList(categoryService.GetOrderedByName(),
-                "CategoryId", "Name", category.CategoryId);
+                var reqUrl = HttpContext.Request.Url;
+                var baseUrl = string.Format("{0}://{1}",
+                    reqUrl.Scheme, reqUrl.Authority);
+                client.BaseAddress = new Uri(baseUrl);
+                client.DefaultRequestHeaders.Clear();
+
+                var url = "Api/Categories";
+                if (id != null) url += "/" + id;
+
+                var request = await client.GetAsync(url);
+                //HttpContent content = new HttpContent();
+                ////content.
+                //var r = client.PostAsync(url, content);
+
+                if (action != null)
+                    action.Invoke(request);
+
+                return request;
             }
         }
+
+        /*  private void PopularViewBag(Category category  = null)
+          {
+              if (category == null)
+              {
+                  ViewBag.CategoryId = new SelectList(categoryService.GetOrderedByName(),
+                  "CategoryId", "Name");
+              }
+              else
+              {
+                  ViewBag.CategoryId = new SelectList(categoryService.GetOrderedByName(),
+                  "CategoryId", "Name", category.CategoryId);
+              }
+          }*/
 
         private ActionResult SaveCategory(Category category)
         {
@@ -76,7 +148,7 @@ namespace Nadja.Controllers
         // GET: Create
         public ActionResult Create()
     {
-            PopularViewBag();
+            
             return View();       
     }
 
@@ -89,11 +161,10 @@ namespace Nadja.Controllers
         }
     
         // GET: Categories/Edit/5
-        public ActionResult Edit(long? id)
+        public async Task<ActionResult> Edit(long? id)
         {
-           
-            PopularViewBag(categoryService.ById((long)id));
-            return GetViewCategoryById(id);
+
+            return await GetViewById(id);
 
         }
 
@@ -109,17 +180,19 @@ namespace Nadja.Controllers
         public async Task<ActionResult> Details(long? id)
         {
           
-            return GetViewCategoryById(id);
+            return await GetViewById(id);
         }
+
 
         // GET: Categories/Delete/5
-        public ActionResult Delete(long? id)
+        public async Task<ActionResult> Delete(long? id)
         {
-            return GetViewCategoryById(id);
+            return await GetViewById(id);
         }
+        
 
-        // POST: Categories/Delete/5
-        [HttpPost]
+          // POST: Categories/Delete/5
+          [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(long id)
         { 
